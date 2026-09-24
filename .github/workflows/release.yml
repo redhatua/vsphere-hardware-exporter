@@ -20,10 +20,10 @@ jobs:
       - name: Extract release notes from CHANGELOG.md
         run: |
           v="${GITHUB_REF_NAME#v}"
-          awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > release-notes.md
+          awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ || /^\[[^]]+\]: / {f=0} f' CHANGELOG.md > release-notes.md
           if [ ! -s release-notes.md ]; then
             echo "::warning::no '## [$v]' section in CHANGELOG.md; falling back to [Unreleased]"
-            awk '/^## \[Unreleased\]/ {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > release-notes.md
+            awk '/^## \[Unreleased\]/ {f=1; next} /^## \[/ || /^\[[^]]+\]: / {f=0} f' CHANGELOG.md > release-notes.md
           fi
           test -s release-notes.md
       - uses: goreleaser/goreleaser-action@v6
