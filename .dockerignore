@@ -1,0 +1,6 @@
+.git
+dist
+*.md
+docs
+dashboards
+examples

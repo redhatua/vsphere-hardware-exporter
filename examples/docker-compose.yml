@@ -1,0 +1,21 @@
+services:
+  vsphere-hardware-exporter:
+    image: ghcr.io/redhatua/vsphere-hardware-exporter:latest # pin a version in production
+    restart: unless-stopped
+    # Must match the owner of vsphere_password.txt (see `id -u`, `id -g`), because the secret is a
+    # bind mount that keeps host ownership and the image's default non-root user could not read it.
+    user: "1000:1000"
+    environment:
+      VSPHERE_URL: https://vcenter.example.com
+      VSPHERE_USERNAME: readonly@vsphere.local
+      VSPHERE_PASSWORD_FILE: /run/secrets/vsphere_password
+      # VSPHERE_CA_FILE: /etc/ssl/vcenter-ca.pem
+      # EXPORT_SERIAL: "true"
+    secrets:
+      - vsphere_password
+    ports:
+      - "127.0.0.1:9877:9877"
+
+secrets:
+  vsphere_password:
+    file: ./vsphere_password.txt # keep this file out of git (mode 0600)

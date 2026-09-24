@@ -1,0 +1,800 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Prometheus / VictoriaMetrics datasource",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "title": "vSphere hardware inventory",
+  "uid": "vsphere-hardware-inventory",
+  "tags": [
+    "vsphere",
+    "inventory"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "",
+  "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "vcenter",
+        "label": "vCenter",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uuid": "${DS_PROMETHEUS}"
+        },
+        "query": {
+          "query": "label_values(vsphere_host_hw_info, vcenter)",
+          "refId": "v"
+        },
+        "definition": "label_values(vsphere_host_hw_info, vcenter)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      },
+      {
+        "name": "datacenter",
+        "label": "Datacenter",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uuid": "${DS_PROMETHEUS}"
+        },
+        "query": {
+          "query": "label_values(vsphere_host_hw_info{vcenter=~\"$vcenter\"}, datacenter)",
+          "refId": "v"
+        },
+        "definition": "label_values(vsphere_host_hw_info{vcenter=~\"$vcenter\"}, datacenter)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      },
+      {
+        "name": "cluster",
+        "label": "Cluster",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uuid": "${DS_PROMETHEUS}"
+        },
+        "query": {
+          "query": "label_values(vsphere_host_hw_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\"}, cluster)",
+          "refId": "v"
+        },
+        "definition": "label_values(vsphere_host_hw_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\"}, cluster)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      },
+      {
+        "name": "host",
+        "label": "Host",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uuid": "${DS_PROMETHEUS}"
+        },
+        "query": {
+          "query": "label_values(vsphere_host_hw_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\"}, host)",
+          "refId": "v"
+        },
+        "definition": "label_values(vsphere_host_hw_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\"}, host)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Hosts",
+      "datasource": {
+        "type": "prometheus",
+        "uuid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(vsphere_host_hw_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none"
+      }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "CPU cores",
+      "datasource": {
+        "type": "prometheus",
+        "uuid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(vsphere_host_cpu_cores{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none"
+      }
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Memory",
+      "datasource": {
+        "type": "prometheus",
+        "uuid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(vsphere_host_memory_bytes{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none"
+      }
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Exporter up (all vCenters)",
+      "datasource": {
+        "type": "prometheus",
+        "uuid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "min(vsphere_hw_exporter_up)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none"
+      }
+    },
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Host hardware",
+      "datasource": {
+        "type": "prometheus",
+        "uuid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_hw_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_cpu_sockets{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_cpu_cores{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_cpu_threads{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_memory_bytes{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_in_maintenance_mode{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "F"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Value #A": true,
+              "job": true,
+              "instance": true
+            },
+            "renameByName": {
+              "vcenter": "vCenter",
+              "datacenter": "Datacenter",
+              "cluster": "Cluster",
+              "host": "Host",
+              "vendor": "Vendor",
+              "model": "Model",
+              "bios_version": "BIOS",
+              "bios_date": "BIOS date",
+              "cpu_model": "CPU",
+              "esxi_version": "ESXi",
+              "esxi_build": "Build",
+              "Value #B": "Sockets",
+              "Value #C": "Cores",
+              "Value #D": "Threads",
+              "Value #E": "Memory",
+              "Value #F": "Maintenance"
+            },
+            "indexByName": {
+              "host": 0,
+              "cluster": 1,
+              "datacenter": 2,
+              "vcenter": 3,
+              "vendor": 4,
+              "model": 5,
+              "cpu_model": 6,
+              "Value #B": 7,
+              "Value #C": 8,
+              "Value #D": 9,
+              "Value #E": 10,
+              "esxi_version": 11,
+              "esxi_build": 12,
+              "bios_version": 13,
+              "bios_date": 14,
+              "Value #F": 15
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #E"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #F"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "no"
+                      },
+                      "1": {
+                        "text": "yes",
+                        "color": "orange"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Host",
+            "desc": false
+          }
+        ],
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Physical NICs",
+      "datasource": {
+        "type": "prometheus",
+        "uuid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_nic_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_nic_speed_mbps{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Value #A": true,
+              "job": true,
+              "instance": true,
+              "vcenter": true,
+              "datacenter": true
+            },
+            "renameByName": {
+              "host": "Host",
+              "cluster": "Cluster",
+              "device": "Device",
+              "driver": "Driver",
+              "mac": "MAC",
+              "Value #B": "Speed"
+            },
+            "indexByName": {
+              "host": 0,
+              "cluster": 1,
+              "device": 2,
+              "driver": 3,
+              "mac": 4,
+              "Value #B": 5
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Mbits"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "link down",
+                        "color": "red"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Host",
+            "desc": false
+          }
+        ],
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Disks and LUNs",
+      "datasource": {
+        "type": "prometheus",
+        "uuid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_disk_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_disk_capacity_bytes{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Value #A": true,
+              "job": true,
+              "instance": true,
+              "vcenter": true,
+              "datacenter": true
+            },
+            "renameByName": {
+              "host": "Host",
+              "cluster": "Cluster",
+              "canonical_name": "Device",
+              "vendor": "Vendor",
+              "model": "Model",
+              "ssd": "SSD",
+              "local": "Local",
+              "Value #B": "Capacity"
+            },
+            "indexByName": {
+              "host": 0,
+              "cluster": 1,
+              "canonical_name": 2,
+              "vendor": 3,
+              "model": 4,
+              "ssd": 5,
+              "local": 6,
+              "Value #B": 7
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Host",
+            "desc": false
+          }
+        ],
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Storage HBAs",
+      "datasource": {
+        "type": "prometheus",
+        "uuid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uuid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vsphere_host_hba_info{vcenter=~\"$vcenter\",datacenter=~\"$datacenter\",cluster=~\"$cluster\",host=~\"$host\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Value #A": true,
+              "job": true,
+              "instance": true,
+              "vcenter": true,
+              "datacenter": true
+            },
+            "renameByName": {
+              "host": "Host",
+              "cluster": "Cluster",
+              "device": "Device",
+              "model": "Model",
+              "driver": "Driver",
+              "type": "Type"
+            },
+            "indexByName": {
+              "host": 0,
+              "cluster": 1,
+              "device": 2,
+              "model": 3,
+              "driver": 4,
+              "type": 5
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Host",
+            "desc": false
+          }
+        ],
+        "footer": {
+          "show": false
+        }
+      }
+    }
+  ]
+}
