@@ -5,6 +5,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-09-24
+
+### Fixed
+- Grafana dashboard: works when file-provisioned as well as imported. It now uses a `Datasource` selector and `uid` references instead of the import-only `${DS_PROMETHEUS}` placeholder (#9).
+- Grafana dashboard: tables show one row per host, NIC and disk; previously every host was split across one row per query.
+
+### Changed
+- Container image is built with Go 1.27.
+- GitHub Actions used by CI and releases updated to their current major versions.
+
+### Added
+- README section on importing and provisioning the dashboard, with a screenshot.
+- Automated tests guarding the dashboard JSON.
+
 ## [0.1.1] - 2026-09-24
 
 ### Fixed
@@ -22,6 +36,7 @@ No changes to the exporter binary's behavior compared to 0.1.0.
 - Host include/exclude filters, CA file, explicit insecure-skip-verify opt-in, password file.
 - Docker image (linux/amd64, linux/arm64), Grafana dashboard and example scrape configs.
 
-[Unreleased]: https://github.com/redhatua/vsphere-hardware-exporter/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/redhatua/vsphere-hardware-exporter/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/redhatua/vsphere-hardware-exporter/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/redhatua/vsphere-hardware-exporter/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/redhatua/vsphere-hardware-exporter/releases/tag/v0.1.0
