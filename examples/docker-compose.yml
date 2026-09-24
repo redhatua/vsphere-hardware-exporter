@@ -1,0 +1,18 @@
+services:
+  vsphere-hardware-exporter:
+    image: ghcr.io/redhatua/vsphere-hardware-exporter:latest # pin a version in production
+    restart: unless-stopped
+    environment:
+      VSPHERE_URL: https://vcenter.example.com
+      VSPHERE_USERNAME: readonly@vsphere.local
+      VSPHERE_PASSWORD_FILE: /run/secrets/vsphere_password
+      # VSPHERE_CA_FILE: /etc/ssl/vcenter-ca.pem
+      # EXPORT_SERIAL: "true"
+    secrets:
+      - vsphere_password
+    ports:
+      - "127.0.0.1:9877:9877"
+
+secrets:
+  vsphere_password:
+    file: ./vsphere_password.txt # keep this file out of git (mode 0600)
