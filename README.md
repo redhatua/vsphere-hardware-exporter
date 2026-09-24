@@ -46,7 +46,7 @@ Every flag has an environment variable; flags win over the environment.
 
 | Flag | Environment | Default | Description |
 |---|---|---|---|
-| `--vsphere.url` | `VSPHERE_URL` | – (required) | vCenter or ESXi URL. `/sdk` is appended if no path is given. Must not contain credentials. |
+| `--vsphere.url` | `VSPHERE_URL` | – (required) | vCenter or ESXi URL. Must be `https`; `/sdk` is appended if no path is given. Must not contain credentials. |
 | `--vsphere.username` | `VSPHERE_USERNAME` | – (required) | Account name. |
 | – | `VSPHERE_PASSWORD` | – | Password. There is deliberately no password flag. |
 | `--vsphere.password-file` | `VSPHERE_PASSWORD_FILE` | – | File containing the password (use instead of `VSPHERE_PASSWORD`). |
@@ -111,7 +111,7 @@ count by (esxi_version, esxi_build) (vsphere_host_hw_info)
 vsphere_host_nic_speed_mbps < 10000
 
 # raw local SSD capacity per cluster
-sum by (cluster) (vsphere_host_disk_capacity_bytes * on(host, canonical_name) group_left vsphere_host_disk_info{ssd="true",local="true"})
+sum by (cluster) (vsphere_host_disk_capacity_bytes * on(vcenter, host, canonical_name) group_left vsphere_host_disk_info{ssd="true",local="true"})
 ```
 
 ## vSphere versions

@@ -47,14 +47,24 @@ func Parse(args []string, getenv func(string) string) (*Config, error) {
 		}
 		return flags.String(name, d, usage+" [env "+envKey+"]")
 	}
+	var envErrs []error
 	boolean := func(name, envKey, usage string) *bool {
-		d, _ := strconv.ParseBool(getenv(envKey))
+		var d bool
+		if v := getenv(envKey); v != "" {
+			var err error
+			if d, err = strconv.ParseBool(v); err != nil {
+				envErrs = append(envErrs, fmt.Errorf("invalid boolean in environment variable %s", envKey))
+			}
+		}
 		return flags.Bool(name, d, usage+" [env "+envKey+"]")
 	}
 	dur := func(name, envKey string, def time.Duration, usage string) *time.Duration {
 		d := def
 		if v := getenv(envKey); v != "" {
-			if p, err := time.ParseDuration(v); err == nil {
+			p, err := time.ParseDuration(v)
+			if err != nil {
+				envErrs = append(envErrs, fmt.Errorf("invalid duration in environment variable %s", envKey))
+			} else {
 				d = p
 			}
 		}
@@ -76,6 +86,9 @@ func Parse(args []string, getenv func(string) string) (*Config, error) {
 	version := flags.Bool("version", false, "print version and exit")
 
 	if err := flags.Parse(args); err != nil {
+		return nil, err
+	}
+	if err := errors.Join(envErrs...); err != nil {
 		return nil, err
 	}
 	c := &Config{
@@ -122,8 +135,8 @@ func parseURL(raw string) (*url.URL, error) {
 	if err != nil || u.Host == "" {
 		return nil, errors.New("vsphere url is not a valid URL")
 	}
-	if u.Scheme != "https" && u.Scheme != "http" {
-		return nil, errors.New("vsphere url scheme must be https (or http for testing)")
+	if u.Scheme != "https" {
+		return nil, errors.New("vsphere url scheme must be https; credentials are never sent over plain HTTP")
 	}
 	if u.User != nil {
 		return nil, errors.New("vsphere url must not contain credentials; use VSPHERE_USERNAME and VSPHERE_PASSWORD or --vsphere.password-file")

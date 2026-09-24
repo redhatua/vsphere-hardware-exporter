@@ -13,12 +13,14 @@ import (
 )
 
 type fakeFetcher struct {
+	delay time.Duration
 	fn    func(ctx context.Context) (*inventory.Snapshot, error)
 	calls atomic.Int32
 }
 
 func (f *fakeFetcher) Fetch(ctx context.Context) (*inventory.Snapshot, error) {
 	f.calls.Add(1)
+	time.Sleep(f.delay)
 	return f.fn(ctx)
 }
 
@@ -45,6 +47,7 @@ func TestFailureKeepsLastGoodSnapshot(t *testing.T) {
 	ok := st.LastSuccess
 
 	fail = true
+	f.delay = 20 * time.Millisecond
 	c.Refresh(context.Background())
 	snap, st = c.Get()
 	if st.Up {
@@ -52,6 +55,9 @@ func TestFailureKeepsLastGoodSnapshot(t *testing.T) {
 	}
 	if snap == nil || len(snap.Hosts) != 1 {
 		t.Error("last good snapshot must be kept")
+	}
+	if st.Duration < 20*time.Millisecond {
+		t.Errorf("duration must reflect the failed refresh, got %v", st.Duration)
 	}
 	if !st.LastSuccess.Equal(ok) {
 		t.Error("last success timestamp must not advance on failure")

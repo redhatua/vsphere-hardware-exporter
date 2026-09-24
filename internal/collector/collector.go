@@ -108,6 +108,13 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		base := []string{snap.VCenter, h.Datacenter, h.Cluster, h.Name}
 		with := func(extra ...string) []string { return append(append([]string{}, base...), extra...) }
 
+		g(c.connected, b2f(h.Connected), base...)
+		g(c.poweredOn, b2f(h.PoweredOn), base...)
+		g(c.maintenance, b2f(h.InMaintenance), base...)
+		if !h.Connected {
+			continue // a disconnected host reports no hardware; export state only
+		}
+
 		g(c.hwInfo, 1, with(h.Vendor, h.Model, h.BIOSVersion, h.BIOSDate, h.CPUModel, h.ESXiVersion, h.ESXiBuild)...)
 		if h.UUID != "" {
 			g(c.uuidInfo, 1, with(h.UUID)...)
@@ -123,9 +130,6 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		g(c.cpuThreads, float64(h.CPUThreads), base...)
 		g(c.cpuMHz, float64(h.CPUMHz), base...)
 		g(c.memory, float64(h.MemoryBytes), base...)
-		g(c.connected, b2f(h.Connected), base...)
-		g(c.poweredOn, b2f(h.PoweredOn), base...)
-		g(c.maintenance, b2f(h.InMaintenance), base...)
 
 		for _, n := range h.NICs {
 			g(c.nicInfo, 1, with(n.Device, n.Driver, n.MAC)...)

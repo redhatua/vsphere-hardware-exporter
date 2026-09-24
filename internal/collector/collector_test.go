@@ -161,3 +161,21 @@ func TestLintPassesMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestDisconnectedHostExportsStateOnly(t *testing.T) {
+	h := testHost()
+	h.Connected = false
+	h.PoweredOn = false
+	src := snapshotSource(h)
+	collect(t, Options{ExportSerial: true}, src, "",
+		"vsphere_host_hw_info", "vsphere_host_uuid_info", "vsphere_host_serial_info", "vsphere_host_license_info",
+		"vsphere_host_cpu_cores", "vsphere_host_memory_bytes", "vsphere_host_nic_info", "vsphere_host_disk_info", "vsphere_host_hba_info")
+	collect(t, Options{}, src, `
+# HELP vsphere_host_connected 1 if the host is connected to vCenter.
+# TYPE vsphere_host_connected gauge
+vsphere_host_connected{cluster="cl1",datacenter="dc1",host="esx01.example.com",vcenter="vc.example.com"} 0
+# HELP vsphere_host_powered_on 1 if the host is powered on.
+# TYPE vsphere_host_powered_on gauge
+vsphere_host_powered_on{cluster="cl1",datacenter="dc1",host="esx01.example.com",vcenter="vc.example.com"} 0
+`, "vsphere_host_connected", "vsphere_host_powered_on")
+}

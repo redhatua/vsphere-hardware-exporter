@@ -69,6 +69,7 @@ func (c *Cache) Refresh(ctx context.Context) bool {
 	defer c.mu.Unlock()
 	if err != nil {
 		c.state.Up = false
+		c.state.Duration = dur
 		c.log.Error("inventory refresh failed; serving last good data", "error", err, "duration", dur)
 		return false
 	}

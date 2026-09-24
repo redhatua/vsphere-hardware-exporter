@@ -53,7 +53,11 @@ func (s *Source) Fetch(ctx context.Context) (*Snapshot, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create host view: %w", err)
 	}
-	defer func() { _ = v.Destroy(context.WithoutCancel(ctx)) }()
+	defer func() {
+		cctx, cancel := cleanupContext(ctx)
+		defer cancel()
+		_ = v.Destroy(cctx)
+	}()
 
 	var hosts []mo.HostSystem
 	if err := v.Retrieve(ctx, []string{"HostSystem"}, hostProps, &hosts); err != nil {
@@ -73,11 +77,20 @@ func (s *Source) Fetch(ctx context.Context) (*Snapshot, error) {
 		out := hostFromMO(h)
 		l := loc[h.Reference()]
 		out.Datacenter, out.Cluster = l.datacenter, l.cluster
-		out.License = licenses[out.UUID]
+		out.License = licenses[out.MoID]
 		snap.Hosts = append(snap.Hosts, out)
 	}
 	sort.Slice(snap.Hosts, func(i, j int) bool { return snap.Hosts[i].Name < snap.Hosts[j].Name })
 	return snap, nil
+}
+
+// cleanupTimeout bounds best-effort cleanup calls (view destroy, logout).
+const cleanupTimeout = 10 * time.Second
+
+// cleanupContext survives cancellation of ctx, so cleanup still runs after a
+// timed-out refresh, but never blocks longer than cleanupTimeout.
+func cleanupContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), cleanupTimeout)
 }
 
 func (s *Source) connect(ctx context.Context) (*vim25.Client, func(), error) {
@@ -97,7 +110,11 @@ func (s *Source) connect(ctx context.Context) (*vim25.Client, func(), error) {
 	if err := sm.Login(ctx, url.UserPassword(s.Username, s.Password)); err != nil {
 		return nil, nil, fmt.Errorf("login: %w", err)
 	}
-	logout := func() { _ = sm.Logout(context.WithoutCancel(ctx)) }
+	logout := func() {
+		cctx, cancel := cleanupContext(ctx)
+		defer cancel()
+		_ = sm.Logout(cctx)
+	}
 	return c, logout, nil
 }
 
@@ -115,7 +132,7 @@ func (s *Source) filter(in []mo.HostSystem) []mo.HostSystem {
 	return out
 }
 
-// licenses returns license names keyed by host hardware UUID. It is best effort:
+// licenses returns license names keyed by host managed object ID (the assignment entity ID). It is best effort:
 // read-only accounts or standalone ESXi may not be allowed to query assignments.
 func (s *Source) licenses(ctx context.Context, c *vim25.Client) map[string]string {
 	out := map[string]string{}

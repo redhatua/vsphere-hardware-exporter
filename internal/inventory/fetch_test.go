@@ -68,6 +68,9 @@ func TestFetchVCenter(t *testing.T) {
 	if h.CPUModel == "" || h.CPUCores == 0 || h.CPUThreads == 0 || h.CPUSockets == 0 || h.CPUMHz == 0 || h.MemoryBytes == 0 {
 		t.Errorf("cpu/memory incomplete: %+v", h)
 	}
+	if h.License == "" {
+		t.Error("license not resolved; assignments are keyed by host MoID")
+	}
 	if h.ESXiVersion == "" || h.ESXiBuild == "" || h.BIOSVersion == "" || h.BIOSDate == "" {
 		t.Errorf("product/bios incomplete: %+v", h)
 	}
