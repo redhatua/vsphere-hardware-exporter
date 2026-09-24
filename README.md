@@ -18,7 +18,10 @@ counters and basic state. This exporter covers the part they leave out.
 ```bash
 echo -n 'your-password' > vsphere_password.txt && chmod 600 vsphere_password.txt
 
+# --user makes the container read the 0600 secret file as its owner (the image's default
+# user is a non-root UID that could not read a file that only you can read).
 docker run -d --name vsphere-hardware-exporter -p 9877:9877 \
+  --user "$(id -u):$(id -g)" \
   -v "$PWD/vsphere_password.txt:/run/secrets/vsphere_password:ro" \
   -e VSPHERE_URL=https://vcenter.example.com \
   -e VSPHERE_USERNAME=readonly@vsphere.local \

@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -47,13 +48,13 @@ func Parse(args []string, getenv func(string) string) (*Config, error) {
 		}
 		return flags.String(name, d, usage+" [env "+envKey+"]")
 	}
-	var envErrs []error
+	envErrs := map[string]error{} // flag name -> error in its environment default
 	boolean := func(name, envKey, usage string) *bool {
 		var d bool
 		if v := getenv(envKey); v != "" {
 			var err error
 			if d, err = strconv.ParseBool(v); err != nil {
-				envErrs = append(envErrs, fmt.Errorf("invalid boolean in environment variable %s", envKey))
+				envErrs[name] = fmt.Errorf("invalid boolean in environment variable %s", envKey)
 			}
 		}
 		return flags.Bool(name, d, usage+" [env "+envKey+"]")
@@ -63,7 +64,7 @@ func Parse(args []string, getenv func(string) string) (*Config, error) {
 		if v := getenv(envKey); v != "" {
 			p, err := time.ParseDuration(v)
 			if err != nil {
-				envErrs = append(envErrs, fmt.Errorf("invalid duration in environment variable %s", envKey))
+				envErrs[name] = fmt.Errorf("invalid duration in environment variable %s", envKey)
 			} else {
 				d = p
 			}
@@ -88,8 +89,19 @@ func Parse(args []string, getenv func(string) string) (*Config, error) {
 	if err := flags.Parse(args); err != nil {
 		return nil, err
 	}
-	if err := errors.Join(envErrs...); err != nil {
-		return nil, err
+	// A malformed environment value is an error only if no flag overrides it.
+	flags.Visit(func(f *flag.Flag) { delete(envErrs, f.Name) })
+	if len(envErrs) > 0 {
+		names := make([]string, 0, len(envErrs))
+		for n := range envErrs {
+			names = append(names, n)
+		}
+		sort.Strings(names)
+		errs := make([]error, 0, len(names))
+		for _, n := range names {
+			errs = append(errs, envErrs[n])
+		}
+		return nil, errors.Join(errs...)
 	}
 	c := &Config{
 		Username: *user, CAFile: *caFile, Insecure: *insecure, ListenAddress: *listen,

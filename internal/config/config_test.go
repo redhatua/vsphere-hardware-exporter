@@ -44,6 +44,26 @@ func TestParseEnvAndFlagPrecedence(t *testing.T) {
 	}
 }
 
+func TestFlagOverridesMalformedEnv(t *testing.T) {
+	base := map[string]string{
+		"VSPHERE_URL": "https://vc.example.com", "VSPHERE_USERNAME": "u", "VSPHERE_PASSWORD": "p",
+		"EXPORT_SERIAL": "nope", "REFRESH_INTERVAL": "soon",
+	}
+	// Explicit flags make the broken env values irrelevant.
+	c, err := Parse([]string{"--export-serial=false", "--refresh-interval=2h"}, env(base))
+	if err != nil {
+		t.Fatalf("flags must override malformed env: %v", err)
+	}
+	if c.ExportSerial || c.RefreshInterval != 2*time.Hour {
+		t.Errorf("flag values not applied: %+v", c)
+	}
+	// Overriding only one of them still reports the other.
+	_, err = Parse([]string{"--export-serial=false"}, env(base))
+	if err == nil || !strings.Contains(err.Error(), "REFRESH_INTERVAL") || strings.Contains(err.Error(), "EXPORT_SERIAL") {
+		t.Errorf("want only REFRESH_INTERVAL reported, got %v", err)
+	}
+}
+
 func TestPasswordFile(t *testing.T) {
 	f := filepath.Join(t.TempDir(), "pw")
 	if err := os.WriteFile(f, []byte("from-file\n"), 0o600); err != nil {
