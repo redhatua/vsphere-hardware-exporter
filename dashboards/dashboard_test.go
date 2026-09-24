@@ -111,3 +111,51 @@ func TestTablesStripPerQueryColumnsBeforeMerge(t *testing.T) {
 		t.Error("no table panels found")
 	}
 }
+
+// The grafana.com upload is derived from the main dashboard by Grafana's exporter. It must stay
+// in sync (same panels and queries) and must not carry local datasource names.
+func TestGrafanaComCopyMatchesMainDashboard(t *testing.T) {
+	main := load(t)
+	b, err := os.ReadFile("grafana-com/vsphere-hardware.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var gc map[string]any
+	if err := json.Unmarshal(b, &gc); err != nil {
+		t.Fatal(err)
+	}
+	if inputs, _ := gc["__inputs"].([]any); len(inputs) != 1 || inputs[0].(map[string]any)["name"] != "DS_PROMETHEUS" {
+		t.Errorf("grafana.com copy must declare exactly the DS_PROMETHEUS input, got %v", gc["__inputs"])
+	}
+	if gc["id"] != nil {
+		t.Errorf("id must be null, got %v", gc["id"])
+	}
+	if gc["uid"] != main["uid"] || gc["title"] != main["title"] {
+		t.Errorf("uid/title differ from main dashboard")
+	}
+	if got, want := signature(gc), signature(main); got != want {
+		t.Errorf("panels/queries differ from the main dashboard; regenerate the grafana.com copy (see grafana-com/MAINTAINING.md)\n got: %s\nwant: %s", got, want)
+	}
+	for _, leak := range []string{"127.0.0.1", "prom-test-uid", "\"DS_PROM\"", "${DS_PROM}"} {
+		if strings.Contains(string(b), leak) {
+			t.Errorf("grafana.com copy contains %q", leak)
+		}
+	}
+}
+
+// signature reduces a dashboard to its panel titles/types and query expressions.
+func signature(d map[string]any) string {
+	var parts []string
+	for _, p := range d["panels"].([]any) {
+		pm := p.(map[string]any)
+		parts = append(parts, pm["title"].(string)+"|"+pm["type"].(string))
+		ts, _ := pm["targets"].([]any)
+		for _, tg := range ts {
+			parts = append(parts, tg.(map[string]any)["expr"].(string))
+		}
+	}
+	for _, v := range d["templating"].(map[string]any)["list"].([]any) {
+		parts = append(parts, "var:"+v.(map[string]any)["name"].(string))
+	}
+	return strings.Join(parts, "\n")
+}

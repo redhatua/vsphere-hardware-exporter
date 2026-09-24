@@ -5,6 +5,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+- Dashboard published on grafana.com (ID 25818); listing texts and a sync test live in `dashboards/grafana-com/`.
+
 ## [0.1.2] - 2026-09-24
 
 ### Fixed
