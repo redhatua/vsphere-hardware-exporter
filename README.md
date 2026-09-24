@@ -33,7 +33,7 @@ curl -s localhost:9877/metrics | grep ^vsphere_host_hw_info
 
 Docker Compose: see [`examples/docker-compose.yml`](examples/docker-compose.yml).
 Prometheus / vmagent scrape configs: [`examples/prometheus.yml`](examples/prometheus.yml), [`examples/vmagent.yml`](examples/vmagent.yml).
-Grafana dashboard: import [`dashboards/vsphere-hardware.json`](dashboards/vsphere-hardware.json).
+Grafana dashboard: [`dashboards/vsphere-hardware.json`](dashboards/vsphere-hardware.json), see [Grafana dashboard](#grafana-dashboard).
 
 ### Try it without a vCenter
 
@@ -42,6 +42,31 @@ make sim          # govmomi vCenter simulator on https://127.0.0.1:8989 (user/pa
 make run          # in another terminal
 curl -s localhost:9877/metrics | grep ^vsphere_host
 ```
+
+## Grafana dashboard
+
+![Dashboard screenshot using simulated data](dashboards/screenshot.png)
+
+[`dashboards/vsphere-hardware.json`](dashboards/vsphere-hardware.json) shows a host hardware table, physical NICs,
+disks/LUNs and HBAs, with `vCenter / Datacenter / Cluster / Host` filters. It has a **Datasource** selector at the top,
+so it needs no editing and works both ways:
+
+- **Import:** *Dashboards → New → Import*, upload the JSON and pick nothing else; select your Prometheus-compatible
+  datasource (Prometheus, VictoriaMetrics, ...) in the dashboard's *Datasource* dropdown.
+- **Provisioning** (Ansible, Helm, compose, ...): put the file in a folder and point a provider at it.
+
+```yaml
+# /etc/grafana/provisioning/dashboards/vsphere-hardware.yml
+apiVersion: 1
+providers:
+  - name: vsphere-hardware
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards/vsphere-hardware
+```
+
+The dashboard is tested against Grafana 13.2 provisioned from a file. It relies on instant table queries and the
+`merge` transformation, which are available in all current Grafana versions.
 
 ## Configuration
 
