@@ -1,0 +1,25 @@
+version: 2
+project_name: vsphere-hardware-exporter
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: exporter
+    main: ./cmd/vsphere-hardware-exporter
+    binary: vsphere-hardware-exporter
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files: [LICENSE, README.md, CHANGELOG.md]
+checksum:
+  name_template: checksums.txt
+changelog:
+  disable: true # the release notes come from CHANGELOG.md
