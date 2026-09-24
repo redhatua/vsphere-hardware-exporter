@@ -1,0 +1,6 @@
+/vsphere-hardware-exporter
+/dist/
+*.test
+*.out
+.env
+*.pass
