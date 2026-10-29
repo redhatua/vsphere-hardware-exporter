@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/prometheus/client_golang v1.25.0
-	github.com/vmware/govmomi v0.56.0
+	github.com/vmware/govmomi v0.56.1
 )
 
 require (
