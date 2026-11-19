@@ -1,0 +1,1 @@
+Inventory tables for VMware ESXi hosts: server model, BIOS, CPU, RAM, NICs, disks, HBAs and ESXi build. Data comes from vsphere-hardware-exporter.
